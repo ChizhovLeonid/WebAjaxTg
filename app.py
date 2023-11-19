@@ -121,20 +121,16 @@ def post_into_db(checkbox_data):
 ###############################################################################################################################################################
 
 # Создаем таблицу, если она еще не существует
-command_sql1 = '''
-CREATE TABLE IF NOT EXISTS checkboxes_vasya (id INTEGER PRIMARY KEY,{}'''.format(''.join(f' {checkbox} INTEGER,' for checkbox in checkboxes)).rstrip(',') + ''')'''
-command_sql2 = '''
-CREATE TABLE IF NOT EXISTS checkboxes_petya (id INTEGER PRIMARY KEY,{}'''.format(''.join(f' {checkbox} INTEGER,' for checkbox in checkboxes)).rstrip(',') + ''')'''
-command_sql3 = '''
-CREATE TABLE IF NOT EXISTS checkboxes_admin_all (id INTEGER PRIMARY KEY,{}'''.format(''.join(f' {checkbox} INTEGER,' for checkbox in checkboxes)).rstrip(',') + ''')'''
-command_sql4 = '''
-CREATE TABLE IF NOT EXISTS checkboxes_admin_access_social (id INTEGER PRIMARY KEY,{}'''.format(''.join(f' {checkbox} INTEGER,' for checkbox in checkboxes)).rstrip(',') + ''')'''
-command_sql5 = '''
-CREATE TABLE IF NOT EXISTS checkboxes_admin_access_media (id INTEGER PRIMARY KEY,{}'''.format(''.join(f' {checkbox} INTEGER,' for checkbox in checkboxes)).rstrip(',') + ''')'''
-commands = [command_sql1, command_sql2, command_sql3, command_sql4, command_sql5]
+tables_db = ["checkboxes_vasya", 
+             "checkboxes_petya",
+             "checkboxes_admin_all",
+             "checkboxes_admin_access_social",
+             "checkboxes_admin_access_media"]
 
-for comm in commands:
-    cursor.execute(comm)
+for table in tables_db:
+    command_sql = f'''
+    CREATE TABLE IF NOT EXISTS {table} ''' + '''(id INTEGER PRIMARY KEY,{}'''.format(''.join(f' {checkbox} INTEGER,' for checkbox in checkboxes)).rstrip(',') + ''')'''
+    cursor.execute(command_sql)
 
 ###############################################################################################################################################################
 
@@ -174,6 +170,7 @@ def index_petya():
     if request.method == 'POST':
         checkbox_data = request.form
         names, values = post_into_db(checkbox_data)
+        print(selected_value)
         insert_into_db(selected_value, names, values)
         result_petya = values 
         return checks_enters(result_petya, name_child="Petya")
@@ -190,7 +187,9 @@ def index_admin():
     result_stat = [(checkboxes[i], "checked" if result[i] == 1 else "unchecked") for i in range(len(checkboxes))]            
     if request.method == 'POST':
         checkbox_data = request.form
+        print(checkbox_data)
         names, values = post_into_db(checkbox_data)
+        selected_value = checkbox_data.get('databases')
         insert_into_db(selected_value, names, values)
         return jsonify({'status': 'success', 'message': 'Данные успешно сохранены.'})
     return render_page_admin(result_stat)
